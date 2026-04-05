@@ -30,7 +30,8 @@ app.use(cors({
       callback(null, true);
       return;
     }
-
+    console.log(origin);
+    console.log(env.CORS_ORIGINS);
     if (env.CORS_ORIGINS.includes(origin)) {
       callback(null, true);
       return;
