@@ -21,6 +21,9 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 
 const app = express();
 
+// Trust the first proxy so express-rate-limit can see the X-Forwarded-For IP address
+app.set('trust proxy', 1);
+
 // --- Global Middleware ---
 app.use(helmet());
 app.use(requestId);
@@ -30,8 +33,6 @@ app.use(cors({
       callback(null, true);
       return;
     }
-    console.log(origin);
-    console.log(env.CORS_ORIGINS);
     if (env.CORS_ORIGINS.includes(origin)) {
       callback(null, true);
       return;
