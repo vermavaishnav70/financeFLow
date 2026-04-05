@@ -1,13 +1,10 @@
 # FinanceFlow - Finance Data Processing & Access Control Backend
 
-> **Zorvyn Backend Developer Internship Assignment**  
-> Author: Vaishnav Verma (vermavaishnav70@gmail.com)
-
 A production-ready backend system for a finance dashboard that manages financial records, user roles, permissions, and summary-level analytics. Built with Node.js, Express, PostgreSQL, and Prisma.
 
 ---
 
-## 📋 Assignment Requirements Coverage
+## Coverage
 
 | Requirement | Status | Implementation |
 |------------|--------|----------------|
