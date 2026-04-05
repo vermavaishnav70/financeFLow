@@ -9,7 +9,17 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem('financeflow-token'));
   const [isLoading, setIsLoading] = useState(true);
 
+  const logout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+  }, []);
+
   const fetchUser = useCallback(async () => {
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch(`${ENV.API_BASE_URL}/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -18,14 +28,14 @@ export function AuthProvider({ children }) {
         const data = await res.json();
         setUser(data.data);
       } else {
-        setToken(null);
+        logout();
       }
     } catch {
-      setToken(null);
+      logout();
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, [logout, token]);
 
   useEffect(() => {
     if (token) {
@@ -36,6 +46,25 @@ export function AuthProvider({ children }) {
       setUser(null);
       setIsLoading(false);
     }
+  }, [fetchUser, token]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    const handleWindowFocus = () => {
+      fetchUser();
+    };
+
+    const sessionCheckInterval = window.setInterval(() => {
+      fetchUser();
+    }, 60000);
+
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      window.clearInterval(sessionCheckInterval);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
   }, [fetchUser, token]);
 
   const login = async (email, password) => {
@@ -64,11 +93,6 @@ export function AuthProvider({ children }) {
     
     setToken(data.data.token);
     setUser(data.data.user);
-  };
-
-  const logout = () => {
-    setToken(null);
-    setUser(null);
   };
 
   return (

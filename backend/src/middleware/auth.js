@@ -41,17 +41,38 @@ function getTokenClaims(req) {
   }
 }
 
+async function loadActiveUserFromToken(req) {
+  const decoded = getTokenClaims(req);
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.id },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      status: true,
+      name: true,
+    },
+  });
+
+  if (!user) {
+    throw ApiError.unauthorized('User no longer exists');
+  }
+
+  if (user.status === 'INACTIVE') {
+    throw ApiError.unauthorized('Account is deactivated');
+  }
+
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    name: user.name,
+  };
+}
+
 const authenticate = async (req, res, next) => {
   try {
-    const decoded = getTokenClaims(req);
-
-    req.user = {
-      id: decoded.id,
-      email: decoded.email,
-      role: decoded.role,
-      name: decoded.name,
-    };
-
+    req.user = await loadActiveUserFromToken(req);
     next();
   } catch (error) {
     next(error);
@@ -60,33 +81,7 @@ const authenticate = async (req, res, next) => {
 
 const authenticateFreshUser = async (req, res, next) => {
   try {
-    const decoded = getTokenClaims(req);
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        status: true,
-        name: true,
-      },
-    });
-
-    if (!user) {
-      throw ApiError.unauthorized('User no longer exists');
-    }
-
-    if (user.status === 'INACTIVE') {
-      throw ApiError.unauthorized('Account is deactivated');
-    }
-
-    req.user = {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      name: user.name,
-    };
-
+    req.user = await loadActiveUserFromToken(req);
     next();
   } catch (error) {
     next(error);
